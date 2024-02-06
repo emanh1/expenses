@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="{{ url_for('static', filename='css/bootstrap.min.css') }}" rel="stylesheet">
+    <style>
+        #form-container {
+            width: 100%;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 15px;
+            background-color: #fff;
+        }
+    </style>
+    <title>Expense Tracker</title>
+</head>
+
+<body>
+    <div class="form" align="center">
+        <h1>Expense Tracker</h1>
+
+        <form action="/add" method="post">
+            <label for="date">Date:</label>
+            <input type="date" id="date" name="date" required>
+            <label for="description">Description:</label>
+            <input type="text" id="description" name="description" required>
+            <label for="payment_type">Type:</label>
+            <select name="payment_type" id="payment_type" required>
+                <option value="cash" selected>Cash</option>
+                <option value="onlbank">Online Banking</option>
+            </select>
+            <label for="amount">Amount:</label>
+            <input type="number" id="amount" name="amount" required>
+
+            <button class="btn btn-primary" type="submit">Add Expense</button>
+        </form>
+    </div>
+    <div align="center">
+        <h2>Total in {{current_date}}: {{total_expense}} VNĐ</h2>
+        <table class="table">
+            <tr>
+                <th>Date</th>
+                <th>Description</th>
+                <th>Type</th>
+                <th>Amount</th>
+                <th>Action</th>
+            </tr>
+            {% for expense in expenses_by_month[current_date] %}
+            <tr>
+                <td>{{ expense['date'] }}</td>
+                <td>{{ expense['description'] }}</td>
+                <td>{{ expense['payment_type'] }}</td>
+                <td>{{ expense['amount'] }} VNĐ</td>
+                <td>
+                    <form action="/delete/{{ loop.index - 1 }}" method="post" style="display: inline;">
+                        <button class="btn btn-danger" type="submit">Delete</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+</body>
+
+</html>
