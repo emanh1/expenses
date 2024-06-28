@@ -65,7 +65,7 @@
         </div>
 
         <div class="table-container">
-            <h2 class="text-center">Total in {{current_date}}: {{'{:,}'.format(total_expense)}} VNĐ</h2>
+            <h2 class="text-center">Total in {{ current_date }}: {{ '{:,}'.format(total_expense) }} VNĐ</h2>
             <table class="table table-striped table-hover">
                 <thead class="thead-dark">
                     <tr>
@@ -84,7 +84,7 @@
                         <td>{{ expense['payment_type'] }}</td>
                         <td>{{ expense['amount'] }} VNĐ</td>
                         <td>
-                            <form action="/delete/{{ loop.index - 1 }}" method="post" style="display: inline;">
+                            <form action="/delete/{{ expense['id'] }}" method="post" style="display: inline;">
                                 <button class="btn btn-danger" type="submit">Delete</button>
                             </form>
                         </td>

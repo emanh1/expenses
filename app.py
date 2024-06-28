@@ -1,23 +1,44 @@
 from flask import Flask, render_template, request, redirect
-import csv
+import sqlite3
 from datetime import datetime
 
 app = Flask(__name__)
 
-CSV_FILE = 'expenses.csv'
+DB_FILE = 'expenses.db'
 
 def read_expenses():
-    with open(CSV_FILE, 'r', newline='') as file:
-        reader = csv.DictReader(file)
-        expenses = list(reader)
-    return expenses
+    conn = sqlite3.connect(DB_FILE)
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM expenses")
+    expenses = cursor.fetchall()
+    conn.close()
 
-def write_expenses(expenses):
-    fieldnames = ['description', 'payment_type', 'amount', 'date']
-    with open(CSV_FILE, 'w', newline='') as file:
-        writer = csv.DictWriter(file, fieldnames=fieldnames)
-        writer.writeheader()
-        writer.writerows(expenses)
+    expenses_list = []
+    for expense in expenses:
+        expenses_list.append({
+            'id': expense[0],
+            'description': expense[1],
+            'payment_type': expense[2],
+            'amount': expense[3],
+            'date': expense[4]
+        })
+
+    return expenses_list
+
+def add_expense_to_db(expense):
+    conn = sqlite3.connect(DB_FILE)
+    cursor = conn.cursor()
+    cursor.execute("INSERT INTO expenses (description, payment_type, amount, date) VALUES (?, ?, ?, ?)",
+                   (expense['description'], expense['payment_type'], expense['amount'], expense['date']))
+    conn.commit()
+    conn.close()
+
+def delete_expense_from_db(expense_id):
+    conn = sqlite3.connect(DB_FILE)
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM expenses WHERE id = ?", (expense_id,))
+    conn.commit()
+    conn.close()
 
 @app.route('/')
 def home():
@@ -36,7 +57,7 @@ def home():
         expenses_by_month[month_year].append(expense)
 
     for expense in expenses_by_month.get(current_date, []):
-            total_expense+=float(expense['amount'])
+        total_expense += float(expense['amount'])
 
     return render_template('index.html', total_expense=total_expense, current_date=current_date, expenses_by_month=expenses_by_month)
 
@@ -49,29 +70,20 @@ def add_expense():
 
     date = datetime.strptime(date_str, '%Y-%m-%d').date()
 
-    expenses = read_expenses()
-
     new_expense = {
         'description': description,
         'payment_type': payment_type,
         'amount': amount,
         'date': date.strftime('%Y-%m-%d')
     }
-    expenses.append(new_expense)
 
-    write_expenses(expenses)
+    add_expense_to_db(new_expense)
 
     return redirect('/')
 
-@app.route('/delete/<int:index>', methods=['POST'])
-def delete_expense(index):
-    expenses = read_expenses()
-
-    if 0 <= index < len(expenses):
-        del expenses[index]
-
-        write_expenses(expenses)
-
+@app.route('/delete/<int:expense_id>', methods=['POST'])
+def delete_expense(expense_id):
+    delete_expense_from_db(expense_id)
     return redirect('/')
 
 if __name__ == '__main__':
